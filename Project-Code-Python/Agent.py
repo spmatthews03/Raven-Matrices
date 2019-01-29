@@ -97,9 +97,10 @@ def solve2x2(problem):
 
     # compare A and C, apply to B
 
+    return -1
 
 def solve3x3():
-    pass
+    return -1
 
 class Agent:
     # The default constructor for your Agent. Make sure to execute any
@@ -170,4 +171,5 @@ class Agent:
         # print('Actual Answer: ' + str(answer))
 
         # print()
+        print('The answer ... ', answer)
         return answer

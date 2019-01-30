@@ -96,6 +96,11 @@ def solve2x2(problem):
                 return int(num)
 
     # compare A and C, apply to B
+    if calculateMSE(problem_figs['A'][1], problem_figs['C'][1]) < 2000:
+        for num, (option, image) in choices.items():
+            if calculateMSE(problem_figs['B'][1], image) < 2000:
+                return int(num)
+
 
     return -1
 

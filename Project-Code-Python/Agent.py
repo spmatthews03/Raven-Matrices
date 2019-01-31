@@ -41,6 +41,18 @@ def compareAttributes(attrs1, attrs2):
     return 0
 
 
+def compareShape(shape1, shape2):
+    im = [None, None]
+    for i, f in enumerate([shape1,shape2]):
+        im[i] = (np.array(f
+                          .convert('L')
+                          .resize((32,32),resample=Image.BICUBIC))
+                 ).astype(np.int)
+    return np.abs(im[0] - im[1]).sum()
+
+
+
+
 def calculateScore(obj1, obj2):
     global match_scores
     match_scores = {}
@@ -81,6 +93,12 @@ def solve2x2(problem):
             if calculateMSE(problem_figs['B'][1], image) < 2000:
                 print("Comparing Vertical...")
                 return int(num)
+
+
+    res = compareShape(problem_figs['A'][1], problem_figs['B'][1])
+
+
+
 
     print("Choosing Random...")
 

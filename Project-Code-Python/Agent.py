@@ -33,34 +33,12 @@ match_scores = {}
 problem_figs = {}
 choices = {}
 
-def compareFigs(fig1, fig2):
-    objects1 = copy.copy(fig1.objects)
-    objects2 = copy.copy(fig2.objects)
-
-
-
-
-    # if len(objects1) > len(objects2):
-    #     for x in range(0, len(objects1) - len(objects2)):
-    #         name = "_" + str(x)
-    #         objects2[name] = RavensObject(name)
-    # elif len(objects2) > len(objects1):
-    #     for x in range(0, len(objects2) - len(objects1)):
-    #         name = "_" + str(x)
-    #         objects1[name] = RavensObject(name)
-
-
-    return calculateScore(objects1, objects2)
-
-
 def compareAttributes(attrs1, attrs2):
 
     if attrs1 == attrs2:
         return 100
 
     return 0
-
-
 
 
 def calculateScore(obj1, obj2):
@@ -93,14 +71,18 @@ def solve2x2(problem):
     if calculateMSE(problem_figs['A'][1], problem_figs['B'][1]) < 2000:
         for num, (option, image) in choices.items():
             if calculateMSE(problem_figs['C'][1], image) < 2000:
+                print("Comparing Horizontal...")
+
                 return int(num)
 
     # compare A and C, apply to B
     if calculateMSE(problem_figs['A'][1], problem_figs['C'][1]) < 2000:
         for num, (option, image) in choices.items():
             if calculateMSE(problem_figs['B'][1], image) < 2000:
+                print("Comparing Vertical...")
                 return int(num)
 
+    print("Choosing Random...")
 
     return -1
 
@@ -137,7 +119,8 @@ class Agent:
         transform_hor = None
         transform_vert = None
         transform_order = 0
-
+        print("=======================================")
+        print("Solving " + problem.name)
         for name, figure in problem.figures.items():
             image = Image.open(figure.visualFilename)
             if name.isdigit():
@@ -147,34 +130,12 @@ class Agent:
 
 
         if(problem.problemType == MATRIX_SIZE["small"]):
-
             answer = solve2x2(problem)
-
-            # problemInfo = problem.figures
-            #
-            #
-            # print("Comparing Horizontal...")
-            # hor_vert_score.append(compareFigs(problemInfo["A"], problemInfo["B"]))
-            #
-            # print("Comparing Vertical...")
-            # hor_vert_score.append(compareFigs(problemInfo["A"], problemInfo["C"]))
-            #
-
         elif problem.problemType == MATRIX_SIZE["large"]:
             answer = solve3x3()
 
 
-        # answer = -1
-        # for x in range(1,7):
-        #     candidate_hor_ver = []
-        #     candidate_hor_ver.append((compareFigs(problemInfo["B"],problem.figures[str(x)])))
+        answer = answer if answer != -1 else randint(1,7)
+        print('My Answer: ' + str(answer))
 
-            # if candidate_hor_ver[0] ==
-
-        # print('Guess for ' + str(problem.name))
-        # print('My Answer: ' + str(guess))
-        # print('Actual Answer: ' + str(answer))
-
-        # print()
-        print('The answer ... ', answer)
         return answer

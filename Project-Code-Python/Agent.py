@@ -16,17 +16,20 @@ import os
 import numpy as np
 import math
 from random import randint
-from RavensObject import RavensObject
 
 MATRIX_SIZE = {
     "small":"2x2",
     "large":"3x3"
 }
 
-FIGURE_SIZE = {
 
-
-}
+A = 'A'
+B = 'B'
+C = 'C'
+size = "size"
+shape = 'shape'
+fill = 'fill'
+angle = 'angle'
 
 match_scores = {}
 
@@ -75,27 +78,122 @@ def calculateMSE(fig1, fig2):
     return mse
 
 
+def createFrames(fig1, fig2):
+
+    fig2_relationship = {}
+
+    for fig1_obj, fig2_obj in zip(fig1.objects,fig2.objects):
+        # fig2_relationship[fig2_obj] = []
+        obj1 = fig1.objects[fig1_obj]
+        obj2 = fig2.objects[fig2_obj]
+        fig1_atts = {}
+        fig2_atts = {}
+        for fig1_att, fig2_att in zip(obj1.attributes,obj2.attributes):
+            fig1_atts[fig1_att] = obj1.attributes[fig1_att]
+            fig2_atts[fig2_att] = obj2.attributes[fig2_att]
+
+
+        try:
+            if fig1_atts[size] == fig2_atts[size]:
+                fig2_relationship["SameSize"] = []
+                fig2_relationship["SameSize"].append(True)
+            else:
+                fig2_relationship["SameSize"] = []
+                fig2_relationship["SameSize"].append(False)
+        except KeyError:
+            pass
+
+
+        try:
+            if fig1_atts[shape] == fig2_atts[shape]:
+                fig2_relationship["SameShape"] = []
+                fig2_relationship["SameShape"].append(True)
+            else:
+                fig2_relationship["SameShape"] = []
+                fig2_relationship["SameShape"].append(False)
+        except KeyError:
+            pass
+
+        try:
+            if fig1_atts[fill] == fig2_atts[fill]:
+                fig2_relationship["SameFill"] = []
+                fig2_relationship["SameFill"].append(True)
+            else:
+                fig2_relationship["SameFill"] = []
+                fig2_relationship["SameFill"].append(False)
+        except KeyError:
+            pass
+
+        try:
+            if fig1_atts[angle] == fig2_atts[angle]:
+                fig2_relationship["SameAngle"] = []
+                fig2_relationship["SameAngle"].append(True)
+            else:
+                fig2_relationship["SameAngle"] = []
+                fig2_relationship["SameAngle"].append(False)
+        except KeyError:
+            pass
+
+    return fig2_relationship
+
+
+def compareFrames(frame1, frame2):
+    score = 0
+
+    for frame1_item, frame2_item in zip(frame1, frame2):
+        if frame1_item == frame2_item and frame1[frame1_item] == frame2[frame2_item]:
+            score += 1
+
+    return score
+
+
+
 def solve2x2(problem):
 
-    problemInfo = problem.figures
+    # res = compareShape(problem_figs['A'][1], problem_figs['B'][1])
 
-    # compare A and B, apply to C
-    if calculateMSE(problem_figs['A'][1], problem_figs['B'][1]) < 2000:
-        for num, (option, image) in choices.items():
-            if calculateMSE(problem_figs['C'][1], image) < 2000:
-                print("Comparing Horizontal...")
+    # horizontal and vertical comparisons
+    A_B_rel = createFrames(problem.figures[A], problem.figures[B])
+    A_C_rel = createFrames(problem.figures[A], problem.figures[C])
 
-                return int(num)
+    # create a list of relationships between C and choices
+    C_i_relationship = {}
+    for i in range(1,7):
+        C_i_relationship[i] = []
+        C_i_relationship[i] = createFrames(problem.figures[C], problem.figures[str(i)])
 
-    # compare A and C, apply to B
-    if calculateMSE(problem_figs['A'][1], problem_figs['C'][1]) < 2000:
-        for num, (option, image) in choices.items():
-            if calculateMSE(problem_figs['B'][1], image) < 2000:
-                print("Comparing Vertical...")
-                return int(num)
+    # create a list of relationshipt between B and choices
+    B_i_relationship = {}
+    for i in range(1,7):
+        B_i_relationship[i] = []
+        B_i_relationship[i] = createFrames(problem.figures[B], problem.figures[str(i)])
+
+    # compare lists A -> B ( horizontal )
+    answer_scores_hor = {}
+    for answer in C_i_relationship:
+        answer_scores_hor[answer] = []
+        answer_scores_hor[answer] = compareFrames(A_B_rel, C_i_relationship[answer])
+
+    # compare lists A -> C ( vertical )
+    answer_scores_ver = {}
+    for answer in B_i_relationship:
+        answer_scores_ver[answer] = []
+        answer_scores_ver[answer] = compareFrames(A_C_rel, B_i_relationship[answer])
 
 
-    res = compareShape(problem_figs['A'][1], problem_figs['B'][1])
+    possible_answers = {}
+    possible_answers = set()
+    max_hor = max(answer_scores_hor.values())
+    max_ver = max(answer_scores_ver.values())
+
+    if max_hor > max_ver or max_hor == max_ver:
+        return answer_scores_hor.get(max(answer_scores_hor.values()))
+    elif max_ver < max_hor:
+        return answer_scores_ver.get(max(answer_scores_hor.values()))
+
+    # possible_answers.add(max(answer_scores_hor))
+    # answer_list
+
 
 
 
@@ -117,9 +215,6 @@ class Agent:
         self.figures = {}
         self.choices = {}
         self.here = sys.path[0]
-
-
-
 
 
     # The primary method for solving incoming Raven's Progressive Matrices.
@@ -153,7 +248,8 @@ class Agent:
             answer = solve3x3()
 
 
-        answer = answer if answer != -1 else randint(1,7)
+
+        answer = answer if answer != -1 and answer != None else randint(1,7)
         print('My Answer: ' + str(answer))
 
         return answer

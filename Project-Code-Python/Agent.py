@@ -12,6 +12,7 @@
 from PIL import Image
 import pprint
 import sys
+import itertools
 import os
 import numpy as np
 import math
@@ -36,46 +37,46 @@ match_scores = {}
 problem_figs = {}
 choices = {}
 
-def compareAttributes(attrs1, attrs2):
-
-    if attrs1 == attrs2:
-        return 100
-
-    return 0
-
-
-def compareShape(shape1, shape2):
-    im = [None, None]
-    for i, f in enumerate([shape1,shape2]):
-        im[i] = (np.array(f
-                          .convert('L')
-                          .resize((32,32),resample=Image.BICUBIC))
-                 ).astype(np.int)
-    return np.abs(im[0] - im[1]).sum()
-
-
-
-
-def calculateScore(obj1, obj2):
-    global match_scores
-    match_scores = {}
-
-    for object1 in obj1:
-        match_scores[object1] = {}
-        for object2 in obj2:
-            match_scores = compareAttributes(obj1[object1].attributes, obj2[object2].attributes)
-    print("SCORE TABLE = ")
-    pprint.pprint(match_scores)
-    return match_scores
+# def compareAttributes(attrs1, attrs2):
+#
+#     if attrs1 == attrs2:
+#         return 100
+#
+#     return 0
+#
+#
+# def compareShape(shape1, shape2):
+#     im = [None, None]
+#     for i, f in enumerate([shape1,shape2]):
+#         im[i] = (np.array(f
+#                           .convert('L')
+#                           .resize((32,32),resample=Image.BICUBIC))
+#                  ).astype(np.int)
+#     return np.abs(im[0] - im[1]).sum()
 
 
 
-def calculateMSE(fig1, fig2):
-    fig1Array = np.array(fig1)
-    fig2Array = np.array(fig2)
-    mse = np.sum((fig1Array.astype('float') - fig2Array.astype('float')) ** 2)
-    mse /= float(fig1Array.shape[0] * fig1Array.shape[1])
-    return mse
+
+# def calculateScore(obj1, obj2):
+#     global match_scores
+#     match_scores = {}
+#
+#     for object1 in obj1:
+#         match_scores[object1] = {}
+#         for object2 in obj2:
+#             match_scores = compareAttributes(obj1[object1].attributes, obj2[object2].attributes)
+#     print("SCORE TABLE = ")
+#     pprint.pprint(match_scores)
+#     return match_scores
+#
+#
+#
+# def calculateMSE(fig1, fig2):
+#     fig1Array = np.array(fig1)
+#     fig2Array = np.array(fig2)
+#     mse = np.sum((fig1Array.astype('float') - fig2Array.astype('float')) ** 2)
+#     mse /= float(fig1Array.shape[0] * fig1Array.shape[1])
+#     return mse
 
 
 def createFrames(fig1, fig2):
@@ -83,7 +84,6 @@ def createFrames(fig1, fig2):
     fig2_relationship = {}
 
     for fig1_obj, fig2_obj in zip(fig1.objects,fig2.objects):
-        # fig2_relationship[fig2_obj] = []
         obj1 = fig1.objects[fig1_obj]
         obj2 = fig2.objects[fig2_obj]
         fig1_atts = {}
@@ -92,45 +92,53 @@ def createFrames(fig1, fig2):
             fig1_atts[fig1_att] = obj1.attributes[fig1_att]
             fig2_atts[fig2_att] = obj2.attributes[fig2_att]
 
+        # in the case of multiple objects in an image,
+        # this will calulculate which object the previous
+        # object should be mapped too
+        # b_perm = list(itertools.permutations(fig2_atts))
+        #
+
+        fig2_relationship[fig2_obj] = []
+        fig2_relationship[fig2_obj] = {}
 
         try:
             if fig1_atts[size] == fig2_atts[size]:
-                fig2_relationship["SameSize"] = []
-                fig2_relationship["SameSize"].append(True)
+                fig2_relationship[fig2_obj]["SameSize"] = []
+                fig2_relationship[fig2_obj]["SameSize"].append(True)
             else:
-                fig2_relationship["SameSize"] = []
-                fig2_relationship["SameSize"].append(False)
+                fig2_relationship[fig2_obj]["SameSize"] = []
+                fig2_relationship[fig2_obj]["SameSize"].append(False)
         except KeyError:
             pass
 
 
         try:
             if fig1_atts[shape] == fig2_atts[shape]:
-                fig2_relationship["SameShape"] = []
-                fig2_relationship["SameShape"].append(True)
+                fig2_relationship[fig2_obj]["SameShape"] = []
+                fig2_relationship[fig2_obj]["SameShape"].append(True)
             else:
-                fig2_relationship["SameShape"] = []
-                fig2_relationship["SameShape"].append(False)
+                fig2_relationship[fig2_obj]["SameShape"] = []
+                fig2_relationship[fig2_obj]["SameShape"].append(False)
         except KeyError:
             pass
 
         try:
             if fig1_atts[fill] == fig2_atts[fill]:
-                fig2_relationship["SameFill"] = []
-                fig2_relationship["SameFill"].append(True)
+                fig2_relationship[fig2_obj]["SameFill"] = []
+                fig2_relationship[fig2_obj]["SameFill"].append(True)
             else:
-                fig2_relationship["SameFill"] = []
-                fig2_relationship["SameFill"].append(False)
+                fig2_relationship[fig2_obj]["SameFill"] = []
+                fig2_relationship[fig2_obj]["SameFill"].append(False)
         except KeyError:
             pass
 
         try:
             if fig1_atts[angle] == fig2_atts[angle]:
-                fig2_relationship["SameAngle"] = []
-                fig2_relationship["SameAngle"].append(True)
+                fig2_relationship[fig2_obj]["SameAngle"] = []
+                fig2_relationship[fig2_obj]["SameAngle"].append(True)
             else:
-                fig2_relationship["SameAngle"] = []
-                fig2_relationship["SameAngle"].append(False)
+                fig2_relationship[fig2_obj]["SameAngle"] = []
+                fig2_relationship[fig2_obj]["SameAngle"].append(False)
         except KeyError:
             pass
 
@@ -140,9 +148,11 @@ def createFrames(fig1, fig2):
 def compareFrames(frame1, frame2):
     score = 0
 
-    for frame1_item, frame2_item in zip(frame1, frame2):
-        if frame1_item == frame2_item and frame1[frame1_item] == frame2[frame2_item]:
-            score += 1
+    for obj in frame1:
+        for frame1_item, frame2_item in zip(frame1, frame2):
+            for atts1, atts2 in zip(frame1[frame1_item],frame2[frame2_item]):
+                if atts1 == atts2 and frame1[frame1_item][atts1] == frame2[frame2_item][atts2]:
+                    score += 1
 
     return score
 
@@ -162,7 +172,7 @@ def solve2x2(problem):
         C_i_relationship[i] = []
         C_i_relationship[i] = createFrames(problem.figures[C], problem.figures[str(i)])
 
-    # create a list of relationshipt between B and choices
+    # create a list of relationships between B and choices
     B_i_relationship = {}
     for i in range(1,7):
         B_i_relationship[i] = []
@@ -188,7 +198,7 @@ def solve2x2(problem):
 
     if max_hor > max_ver or max_hor == max_ver:
         return answer_scores_hor.get(max(answer_scores_hor.values()))
-    elif max_ver < max_hor:
+    elif max_hor < max_ver:
         return answer_scores_ver.get(max(answer_scores_hor.values()))
 
     # possible_answers.add(max(answer_scores_hor))

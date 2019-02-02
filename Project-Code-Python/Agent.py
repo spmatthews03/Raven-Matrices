@@ -9,7 +9,7 @@
 # These methods will be necessary for the project's main method to run.
 
 # Install Pillow and uncomment this line to access image processing.
-from PIL import Image
+# from PIL import Image
 import pprint
 import sys
 import itertools
@@ -283,12 +283,12 @@ class Agent:
         transform_order = 0
         print("=======================================")
         print("Solving " + problem.name)
-        for name, figure in problem.figures.items():
-            image = Image.open(figure.visualFilename)
-            if name.isdigit():
-                choices[name] = (figure, image)
-            else:
-                problem_figs[name] = (figure, image)
+        # for name, figure in problem.figures.items():
+        #     image = Image.open(figure.visualFilename)
+        #     if name.isdigit():
+        #         choices[name] = (figure, image)
+        #     else:
+        #         problem_figs[name] = (figure, image)
 
 
         if(problem.problemType == MATRIX_SIZE["small"]):

@@ -31,6 +31,7 @@ size = "size"
 shape = 'shape'
 fill = 'fill'
 angle = 'angle'
+vertical_flip = 'vertical-flip'
 
 match_scores = {}
 
@@ -79,80 +80,118 @@ choices = {}
 #     return mse
 
 
-def createFrames(fig1, fig2):
+def createFrames(fig1, fig2, problem):
 
-    fig2_relationship = {}
+    relationship = {}
+    a_objs = fig1.objects
+    b_objs = fig2.objects
 
-    for fig1_obj, fig2_obj in zip(fig1.objects,fig2.objects):
-        obj1 = fig1.objects[fig1_obj]
-        obj2 = fig2.objects[fig2_obj]
-        fig1_atts = {}
-        fig2_atts = {}
-        for fig1_att, fig2_att in zip(obj1.attributes,obj2.attributes):
-            fig1_atts[fig1_att] = obj1.attributes[fig1_att]
-            fig2_atts[fig2_att] = obj2.attributes[fig2_att]
+    a_objs_list = [a_objs[obj] for obj in a_objs]
+    b_objs_list = [b_objs[obj] for obj in b_objs]
 
-        # in the case of multiple objects in an image,
-        # this will calulculate which object the previous
-        # object should be mapped too
-        # b_perm = list(itertools.permutations(fig2_atts))
-        #
+    while len(a_objs_list) != len(b_objs_list):
+        if len(a_objs_list) > len(b_objs_list):
+            b_objs_list.append(None)
+        if len(b_objs_list) > len(a_objs_list):
+            a_objs_list.append(None)
 
-        fig2_relationship[fig2_obj] = []
-        fig2_relationship[fig2_obj] = {}
 
-        try:
-            if fig1_atts[size] == fig2_atts[size]:
-                fig2_relationship[fig2_obj]["SameSize"] = []
-                fig2_relationship[fig2_obj]["SameSize"].append(True)
+    # b_perms = list(itertools.permutations(b_objs_list))
+
+
+    for a_obj, b_obj in zip(a_objs_list,b_objs_list):
+        a_obj_atts = {}
+        b_obj_atts = {}
+        # relationship[a_obj] = []
+        # relationship[b_obj] = []
+        relationship[a_obj] = {}
+        relationship[b_obj] = {}
+
+        if a_obj == None:
+            relationship[b_obj]["Added"] = []
+            relationship[b_obj]["Added"].append(True)
+        elif b_obj == None:
+            relationship[a_obj]["Deleted"] = []
+            relationship[a_obj]["Deleted"].append(True)
+        else:
+            # have to check before doing this
+            # A may be added or deleted and vis versa for b
+            for a_obj_att in a_obj.attributes:
+                a_obj_atts[a_obj_att] = a_obj.attributes[a_obj_att]
+
+
+            for b_obj_att in b_obj.attributes:
+                b_obj_atts[b_obj_att] = b_obj.attributes[b_obj_att]
+
+
+
+            # in the case of multiple objects in an image,
+            # this will calulculate which object the previous
+            # object should be mapped too
+            # b_perm = list(itertools.permutations(fig2_atts))
+
+
+
+            try:
+                if a_obj_atts[size] == b_obj_atts[size]:
+                    relationship[b_obj]["SameSize"] = []
+                    relationship[b_obj]["SameSize"].append(True)
+                else:
+                    relationship[b_obj]["SameSize"] = []
+                    relationship[b_obj]["SameSize"].append(False)
+            except KeyError:
+                pass
+
+
+            try:
+                if a_obj_atts[shape] == b_obj_atts[shape]:
+                    relationship[b_obj]["SameShape"] = []
+                    relationship[b_obj]["SameShape"].append(True)
+                else:
+                    relationship[b_obj]["SameShape"] = []
+                    relationship[b_obj]["SameShape"].append(False)
+            except KeyError:
+                pass
+
+            try:
+                if a_obj_atts[fill] == b_obj_atts[fill]:
+                    relationship[b_obj]["SameFill"] = []
+                    relationship[b_obj]["SameFill"].append(True)
+                else:
+                    relationship[b_obj]["SameFill"] = []
+                    relationship[b_obj]["SameFill"].append(False)
+            except KeyError:
+                pass
+
+            try:
+                if a_obj_atts[angle] == b_obj_atts[angle]:
+                    relationship[b_obj]["SameAngle"] = []
+                    relationship[b_obj]["SameAngle"].append(True)
+                else:
+                    relationship[b_obj]["SameAngle"] = []
+                    relationship[b_obj]["SameAngle"].append(False)
+                    relationship[b_obj]["AngleDiff"] = []
+                    relationship[b_obj]["AngleDiff"].append(abs(int(a_obj_atts[angle]) - int(b_obj_atts[angle])))
+            except KeyError:
+                pass
+
+            if vertical_flip in a_obj_atts and vertical_flip in b_obj_atts\
+                    or vertical_flip not in a_obj_atts and vertical_flip not in b_obj_atts:
+                relationship[b_obj]["VerticalFlip"] = []
+                relationship[b_obj]["VerticalFlip"].append(False)
             else:
-                fig2_relationship[fig2_obj]["SameSize"] = []
-                fig2_relationship[fig2_obj]["SameSize"].append(False)
-        except KeyError:
-            pass
+                relationship[b_obj]["VerticalFlip"] = []
+                relationship[b_obj]["VerticalFlip"].append(True)
 
-
-        try:
-            if fig1_atts[shape] == fig2_atts[shape]:
-                fig2_relationship[fig2_obj]["SameShape"] = []
-                fig2_relationship[fig2_obj]["SameShape"].append(True)
-            else:
-                fig2_relationship[fig2_obj]["SameShape"] = []
-                fig2_relationship[fig2_obj]["SameShape"].append(False)
-        except KeyError:
-            pass
-
-        try:
-            if fig1_atts[fill] == fig2_atts[fill]:
-                fig2_relationship[fig2_obj]["SameFill"] = []
-                fig2_relationship[fig2_obj]["SameFill"].append(True)
-            else:
-                fig2_relationship[fig2_obj]["SameFill"] = []
-                fig2_relationship[fig2_obj]["SameFill"].append(False)
-        except KeyError:
-            pass
-
-        try:
-            if fig1_atts[angle] == fig2_atts[angle]:
-                fig2_relationship[fig2_obj]["SameAngle"] = []
-                fig2_relationship[fig2_obj]["SameAngle"].append(True)
-            else:
-                fig2_relationship[fig2_obj]["SameAngle"] = []
-                fig2_relationship[fig2_obj]["SameAngle"].append(False)
-        except KeyError:
-            pass
-
-    return fig2_relationship
+    return relationship
 
 
 def compareFrames(frame1, frame2):
     score = 0
 
-    for obj in frame1:
-        for frame1_item, frame2_item in zip(frame1, frame2):
-            for atts1, atts2 in zip(frame1[frame1_item],frame2[frame2_item]):
-                if atts1 == atts2 and frame1[frame1_item][atts1] == frame2[frame2_item][atts2]:
-                    score += 1
+    for obj1, obj2 in zip(frame1,frame2):
+        if frame1[obj1] == frame2[obj2]:
+            score += 1
 
     return score
 
@@ -163,20 +202,20 @@ def solve2x2(problem):
     # res = compareShape(problem_figs['A'][1], problem_figs['B'][1])
 
     # horizontal and vertical comparisons
-    A_B_rel = createFrames(problem.figures[A], problem.figures[B])
-    A_C_rel = createFrames(problem.figures[A], problem.figures[C])
+    A_B_rel = createFrames(problem.figures[A], problem.figures[B], problem)
+    A_C_rel = createFrames(problem.figures[A], problem.figures[C], problem)
 
     # create a list of relationships between C and choices
     C_i_relationship = {}
     for i in range(1,7):
         C_i_relationship[i] = []
-        C_i_relationship[i] = createFrames(problem.figures[C], problem.figures[str(i)])
+        C_i_relationship[i] = createFrames(problem.figures[C], problem.figures[str(i)], problem)
 
     # create a list of relationships between B and choices
     B_i_relationship = {}
     for i in range(1,7):
         B_i_relationship[i] = []
-        B_i_relationship[i] = createFrames(problem.figures[B], problem.figures[str(i)])
+        B_i_relationship[i] = createFrames(problem.figures[B], problem.figures[str(i)], problem)
 
     # compare lists A -> B ( horizontal )
     answer_scores_hor = {}

@@ -14,7 +14,7 @@ import pprint
 import sys
 import itertools
 import os
-import numpy as np
+# import numpy as np
 import math
 from random import randint
 
@@ -96,14 +96,9 @@ def createFrames(fig1, fig2, problem):
             a_objs_list.append(None)
 
 
-    # b_perms = list(itertools.permutations(b_objs_list))
-
-
     for a_obj, b_obj in zip(a_objs_list,b_objs_list):
         a_obj_atts = {}
         b_obj_atts = {}
-        # relationship[a_obj] = []
-        # relationship[b_obj] = []
         relationship[a_obj] = {}
         relationship[b_obj] = {}
 
@@ -163,6 +158,18 @@ def createFrames(fig1, fig2, problem):
             except KeyError:
                 pass
 
+
+            # TODO: fix whatever is wrong with this
+            try:
+                a_obj_atts[angle]
+            except KeyError:
+                a_obj_atts[angle] = 0
+
+            try:
+                b_obj_atts[angle]
+            except KeyError:
+                b_obj_atts[angle] = 0
+
             try:
                 if a_obj_atts[angle] == b_obj_atts[angle]:
                     relationship[b_obj]["SameAngle"] = []
@@ -173,6 +180,7 @@ def createFrames(fig1, fig2, problem):
                     relationship[b_obj]["AngleDiff"] = []
                     relationship[b_obj]["AngleDiff"].append(abs(int(a_obj_atts[angle]) - int(b_obj_atts[angle])))
             except KeyError:
+                # relationship[b_obj]["SameAngle"]
                 pass
 
             if vertical_flip in a_obj_atts and vertical_flip in b_obj_atts\
@@ -220,25 +228,43 @@ def solve2x2(problem):
     # compare lists A -> B ( horizontal )
     answer_scores_hor = {}
     for answer in C_i_relationship:
-        answer_scores_hor[answer] = []
+        answer_scores_hor[answer] = 0
         answer_scores_hor[answer] = compareFrames(A_B_rel, C_i_relationship[answer])
 
     # compare lists A -> C ( vertical )
     answer_scores_ver = {}
     for answer in B_i_relationship:
-        answer_scores_ver[answer] = []
+        answer_scores_ver[answer] = 0
         answer_scores_ver[answer] = compareFrames(A_C_rel, B_i_relationship[answer])
 
 
-    possible_answers = {}
-    possible_answers = set()
+    possible_answers = []
     max_hor = max(answer_scores_hor.values())
     max_ver = max(answer_scores_ver.values())
+    # possible_answers[max_hor]
 
-    if max_hor > max_ver or max_hor == max_ver:
-        return answer_scores_hor.get(max(answer_scores_hor.values()))
-    elif max_hor < max_ver:
-        return answer_scores_ver.get(max(answer_scores_hor.values()))
+    for name, value in answer_scores_hor.items():
+        if value == max(iter(answer_scores_hor.values())):
+            possible_answers.append(name)
+
+    for name, value in answer_scores_ver.items():
+        if value == max(iter(answer_scores_ver.values())):
+            possible_answers.append(name)
+
+    counts = {}
+    for val in possible_answers:
+        counts[val] = counts.get(val, 0) + 1
+
+    print(counts)
+
+    for val in counts:
+        if counts[val] == 2:
+            return val
+
+    # if max_hor > max_ver or max_hor == max_ver:
+    #     return answer_scores_hor.get(max(answer_scores_hor.values()))
+    # elif max_hor < max_ver:
+    #     return answer_scores_ver.get(max(answer_scores_hor.values()))
 
     # possible_answers.add(max(answer_scores_hor))
     # answer_list
@@ -298,7 +324,7 @@ class Agent:
 
 
 
-        answer = answer if answer != -1 and answer != None else randint(1,7)
+        answer = answer if answer != -1 and answer != None else randint(1,6)
         print('My Answer: ' + str(answer))
 
         return answer

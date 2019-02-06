@@ -38,15 +38,11 @@ match_scores = {}
 problem_figs = {}
 choices = {}
 
-def createFrames(fig1, fig2, problem):
-
+def createFrames(fig1, fig2, relationship_to_match):
+    all_rels = []
     a_objs = fig1.objects
     b_objs = fig2.objects
 
-    # a_objs_list = [a_objs[obj] for obj in a_objs]
-    # b_objs_list = [b_objs[obj] for obj in b_objs]
-    # a_objs_list.sort(key=lambda x: a_objs_list[x])
-    # b_objs_list.sort(key='name')
     a_names = []
     b_names = []
     a_objs_list = []
@@ -69,16 +65,16 @@ def createFrames(fig1, fig2, problem):
     # in the case of multiple objects in an image,
     # this will calulculate which object the previous
     # object should be mapped too
-    b_perm = list(itertools.permutations(b_objs_list))
-
+    b_perm = list(itertools.permutations(b_names))
+    bestrels = {}
+    bestweight = 0
     for b_names in b_perm:
         relationship = {}
+        wt = 0
 
-        for a_name, b_name in zip(a_objs_list,b_names):
+        for a_name, b_name in zip(a_names,b_names):
             a_obj_atts = {}
             b_obj_atts = {}
-            # relationship[a_obj] = {}
-            # relationship[b_obj] = {}
 
             if a_name == None:
                 relationship[b_name] = []
@@ -89,14 +85,21 @@ def createFrames(fig1, fig2, problem):
             else:
                 relationship[b_name] = []
 
+                for obj in a_objs:
+                    if a_objs[obj].name == a_name:
+                        a_obj = obj
+                for obj in b_objs:
+                    if b_objs[obj].name == b_name:
+                        b_obj = obj
+
                 # have to check before doing this
                 # A may be added or deleted and vis versa for b
-                for a_obj_att in a_name.attributes:
-                    a_obj_atts[a_obj_att] = a_name.attributes[a_obj_att]
+                for a_obj_att in a_objs[a_obj].attributes:
+                    a_obj_atts[a_obj_att] = a_objs[a_obj].attributes[a_obj_att]
 
 
-                for b_obj_att in b_name.attributes:
-                    b_obj_atts[b_obj_att] = b_name.attributes[b_obj_att]
+                for b_obj_att in b_objs[b_obj].attributes:
+                    b_obj_atts[b_obj_att] = b_objs[b_obj].attributes[b_obj_att]
 
 
 
@@ -104,6 +107,7 @@ def createFrames(fig1, fig2, problem):
                 try:
                     if a_obj_atts[size] == b_obj_atts[size]:
                         relationship[b_name].append("SameSize")
+                        wt += 5
                     else:
                         relationship[b_name].append("DifferentSize")
                 except KeyError:
@@ -113,16 +117,20 @@ def createFrames(fig1, fig2, problem):
                 try:
                     if a_obj_atts[shape] == b_obj_atts[shape]:
                         relationship[b_name].append("SameShape")
+                        wt += 5
                     else:
                         relationship[b_name].append("DifferentShape")
+                        wt += 2
                 except KeyError:
                     pass
 
                 try:
                     if a_obj_atts[fill] == b_obj_atts[fill]:
                         relationship[b_name].append("SameFill")
+                        wt += 5
                     else:
                         relationship[b_name].append("DifferentFill")
+                        wt += 2
                 except KeyError:
                     pass
 
@@ -141,9 +149,11 @@ def createFrames(fig1, fig2, problem):
                 try:
                     if a_obj_atts[angle] == b_obj_atts[angle]:
                         relationship[b_name].append("SameAngle")
+                        wt += 4
                     else:
                         relationship[b_name].append("DifferentAngle")
                         relationship[b_name].append(abs(int(a_obj_atts[angle]) - int(b_obj_atts[angle])))
+                        wt += 3
                 except KeyError:
                     # relationship[b_obj]["SameAngle"]
                     pass
@@ -162,8 +172,15 @@ def createFrames(fig1, fig2, problem):
                     relationship[b_name].append("VerticalFlip")
                 else:
                     relationship[b_name].append("NotFlipped")
+        if relationship == relationship_to_match:
+            wt += 100
+        if wt > bestweight:
+            bestrels = relationship
+            bestweight = wt
 
-    return relationship
+
+
+    return bestrels
 
 
 def compareFrames(frame1, frame2):
@@ -207,24 +224,24 @@ def solve2x2(problem):
             answer_scores_hor[answer] += len(set(a_b).intersection(rels))
 
     # compare lists A -> C ( vertical )
-    answer_scores_ver = {}
-    for answer, rel in B_i_relationship.items():
-        answer_scores_ver[answer] = 0
-        for a_c, rels in zip(A_B_rel.values(),rel.values()):
-            answer_scores_ver[answer] += len(set(a_c).intersection(rels))
+    # answer_scores_ver = {}
+    # for answer, rel in B_i_relationship.items():
+    #     answer_scores_ver[answer] = 0
+    #     for a_c, rels in zip(A_B_rel.values(),rel.values()):
+    #         answer_scores_ver[answer] += len(set(a_c).intersection(rels))
 
     possible_answers = []
     max_hor = max(answer_scores_hor.values())
-    max_ver = max(answer_scores_ver.values())
+    # max_ver = max(answer_scores_ver.values())
     # possible_answers[max_hor]
 
     for name, value in answer_scores_hor.items():
         if value == max(iter(answer_scores_hor.values())):
             possible_answers.append(name)
 
-    for name, value in answer_scores_ver.items():
-        if value == max(iter(answer_scores_ver.values())):
-            possible_answers.append(name)
+    # for name, value in answer_scores_ver.items():
+    #     if value == max(iter(answer_scores_ver.values())):
+    #         possible_answers.append(name)
 
     counts = {}
     for val in possible_answers:
@@ -232,12 +249,12 @@ def solve2x2(problem):
 
     print(counts)
 
+    # TODO: fix
     for val in counts:
         if counts[val] == 2:
             return val
         else:
             return val
-
     return -1
 
 def solve3x3():

@@ -9,20 +9,14 @@
 # These methods will be necessary for the project's main method to run.
 
 # Install Pillow and uncomment this line to access image processing.
-# from PIL import Image
-import pprint
 import sys
 import itertools
-import os
-# import numpy as np
-import math
-from random import randint
+import random
 
 MATRIX_SIZE = {
     "small":"2x2",
     "large":"3x3"
 }
-
 
 A = 'A'
 B = 'B'
@@ -35,8 +29,6 @@ vertical_flip = 'vertical-flip'
 
 match_scores = {}
 
-problem_figs = {}
-choices = {}
 
 def createFrames(fig1, fig2, relationship_to_match):
     all_rels = []
@@ -127,7 +119,7 @@ def createFrames(fig1, fig2, relationship_to_match):
                 try:
                     if a_obj_atts[fill] == b_obj_atts[fill]:
                         relationship[b_name].append("SameFill")
-                        wt += 5
+                        wt += 4
                     else:
                         relationship[b_name].append("DifferentFill")
                         wt += 2
@@ -149,11 +141,11 @@ def createFrames(fig1, fig2, relationship_to_match):
                 try:
                     if a_obj_atts[angle] == b_obj_atts[angle]:
                         relationship[b_name].append("SameAngle")
-                        wt += 4
+                        wt += 5
                     else:
                         relationship[b_name].append("DifferentAngle")
                         relationship[b_name].append(abs(int(a_obj_atts[angle]) - int(b_obj_atts[angle])))
-                        wt += 3
+                        wt += 2
                 except KeyError:
                     # relationship[b_obj]["SameAngle"]
                     pass
@@ -178,84 +170,81 @@ def createFrames(fig1, fig2, relationship_to_match):
             bestrels = relationship
             bestweight = wt
 
-
-
     return bestrels
 
 
-def compareFrames(frame1, frame2):
-    score = 0
-
-    for obj1 in frame1:
-        for obj2 in frame2:
-            for att1, att2 in zip(obj1.attributes, obj2.attributes):
-                if obj1.attributes[att1] == obj2.attributes[att2]:
-                    score += 1
-
-    return score
+# def considerPosition(problem):
 
 
+
+
+def addToPossibleAnswers(answers):
+    possible_answers = []
+    for name, value in answers.items():
+        if value == max(iter(answers.values())):
+            possible_answers.append(name)
+
+    return possible_answers
+
+
+def addAnswerScores(rel_1, rel_2):
+    answer_scores = {}
+    for answer, rel in rel_2.items():
+        answer_scores[answer] = 0
+        for a_b, rels in zip(rel_1.values(),rel.values()):
+            answer_scores[answer] += len(set(a_b).intersection(rels))
+
+    return answer_scores
+
+
+def createGuessFrames(problem):
+    X_i_relationship = {}
+    for i in range(1,7):
+        X_i_relationship[i] = []
+        X_i_relationship[i] = createFrames(problem.figures[C], problem.figures[str(i)], problem)
+
+    return X_i_relationship
 
 def solve2x2(problem):
-
-    # res = compareShape(problem_figs['A'][1], problem_figs['B'][1])
 
     # horizontal and vertical comparisons
     A_B_rel = createFrames(problem.figures[A], problem.figures[B], problem)
     A_C_rel = createFrames(problem.figures[A], problem.figures[C], problem)
 
     # create a list of relationships between C and choices
-    C_i_relationship = {}
-    for i in range(1,7):
-        C_i_relationship[i] = []
-        C_i_relationship[i] = createFrames(problem.figures[C], problem.figures[str(i)], problem)
-
-    # create a list of relationships between B and choices
-    B_i_relationship = {}
-    for i in range(1,7):
-        B_i_relationship[i] = []
-        B_i_relationship[i] = createFrames(problem.figures[B], problem.figures[str(i)], problem)
+    C_i_relationship = createGuessFrames(problem)
+    B_i_relationship = createGuessFrames(problem)
 
     # compare lists A -> B ( horizontal )
-    answer_scores_hor = {}
-    for answer, rel in C_i_relationship.items():
-        answer_scores_hor[answer] = 0
-        for a_b, rels in zip(A_B_rel.values(),rel.values()):
-            answer_scores_hor[answer] += len(set(a_b).intersection(rels))
+    answer_scores_hor = addAnswerScores(A_B_rel, C_i_relationship)
 
     # compare lists A -> C ( vertical )
-    # answer_scores_ver = {}
-    # for answer, rel in B_i_relationship.items():
-    #     answer_scores_ver[answer] = 0
-    #     for a_c, rels in zip(A_B_rel.values(),rel.values()):
-    #         answer_scores_ver[answer] += len(set(a_c).intersection(rels))
+    answer_scores_ver = addAnswerScores(A_C_rel, B_i_relationship)
 
-    possible_answers = []
-    max_hor = max(answer_scores_hor.values())
-    # max_ver = max(answer_scores_ver.values())
-    # possible_answers[max_hor]
-
-    for name, value in answer_scores_hor.items():
-        if value == max(iter(answer_scores_hor.values())):
-            possible_answers.append(name)
-
-    # for name, value in answer_scores_ver.items():
-    #     if value == max(iter(answer_scores_ver.values())):
-    #         possible_answers.append(name)
+    possible_answers_hor = addToPossibleAnswers(answer_scores_hor)
+    possible_answers_ver = addToPossibleAnswers(answer_scores_ver)
 
     counts = {}
-    for val in possible_answers:
+    for val in possible_answers_hor:
         counts[val] = counts.get(val, 0) + 1
 
+    if len(counts) == 1:
+        print(counts)
+        return list(counts.keys())[0]
+
+    for val in possible_answers_ver:
+        counts[val] = counts.get(val, 0) + 1
     print(counts)
 
+
     # TODO: fix
-    for val in counts:
-        if counts[val] == 2:
-            return val
-        else:
-            return val
-    return -1
+    if len(counts) > 1:
+        for val in counts:
+            if counts[val] == 2:
+                return val
+
+    return random.choice(list(counts))
+
 
 def solve3x3():
     return -1
@@ -268,7 +257,6 @@ class Agent:
     # main().
     def __init__(self):
         self.figures = {}
-        self.choices = {}
         self.here = sys.path[0]
 
 
@@ -282,29 +270,15 @@ class Agent:
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
     def Solve(self,problem):
-        # print "========================="+problem.name+"=========================="
-        hor_vert_score = []
-        transform_hor = None
-        transform_vert = None
-        transform_order = 0
         print("=======================================")
         print("Solving " + problem.name)
-        # for name, figure in problem.figures.items():
-        #     image = Image.open(figure.visualFilename)
-        #     if name.isdigit():
-        #         choices[name] = (figure, image)
-        #     else:
-        #         problem_figs[name] = (figure, image)
-
 
         if(problem.problemType == MATRIX_SIZE["small"]):
             answer = solve2x2(problem)
         elif problem.problemType == MATRIX_SIZE["large"]:
             answer = solve3x3()
 
-
-
-        answer = answer if answer != -1 and answer != None else randint(1,6)
+        answer = answer if answer != -1 and answer != None else random.randint(1,6)
         print('My Answer: ' + str(answer))
 
         return answer

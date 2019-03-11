@@ -3,7 +3,7 @@
 from PIL import ImageFilter, ImageStat, ImageOps, ImageChops, Image
 
 
-THRESHOLD = 0.001
+PIXEL_THRESHOLD = 10
 
 def calculatePercentDifference(image1, image2):
 
@@ -67,3 +67,16 @@ def populateDictionaries(figureImages, answerImages, problem):
     return figuresList, answersList, figuresListStats, answersListStats, figuresListStats, answersListStats
 
 
+
+def checkIfDarkPixelsEqual(img1, img2, img3, img4):
+    tmp = abs(abs(numberDarkPixels(img2) - numberDarkPixels(img1)) - abs(numberDarkPixels(img4) - numberDarkPixels(img3)))
+    if tmp < PIXEL_THRESHOLD:
+        return True
+    else:
+        return False
+
+
+def calculateIfPixelPercentageEqual(img1, img2, img3):
+    percent_1_2 = calculatePercentDifference(img1, img2)
+    percent_2_3 = calculatePercentDifference(img2, img3)
+    return percent_2_3 - percent_1_2

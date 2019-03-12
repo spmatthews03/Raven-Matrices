@@ -20,8 +20,8 @@ from PIL import ImageFilter, ImageStat, ImageOps, ImageChops, Image
 ## =================================================================
 ## =================================================================
 
-PERCENT_THRESHOLD = 0.01
-INCREASE_THRESHOLD = 0.07
+# PERCENT_THRESHOLD =
+INCREASE_THRESHOLD = 10
 
 MATRIX_SIZE = {
     "small":"2x2",
@@ -107,12 +107,19 @@ def solve3x3(problem):
         rowsAreSame = True
 
     # horizontal percentages
-    abc_percent = calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[B], figureImagesStats[C])
-    def_percent = calculateIfPixelPercentageEqual(figureImagesStats[D], figureImagesStats[E], figureImagesStats[F])
+    ab_percent, bc_percent, ac_percent = calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[B], figureImagesStats[C])
+    de_percent, ef_percent, df_percent = calculateIfPixelPercentageEqual(figureImagesStats[D], figureImagesStats[E], figureImagesStats[F])
 
     # vertical percentages
-    adg_percent = calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[D], figureImagesStats[G])
-    beh_percent = calculateIfPixelPercentageEqual(figureImagesStats[B], figureImagesStats[E], figureImagesStats[H])
+    ad_percent, dg_percent, ag_percent = calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[D], figureImagesStats[G])
+    be_percent, eh_percent, bh_percent = calculateIfPixelPercentageEqual(figureImagesStats[B], figureImagesStats[E], figureImagesStats[H])
+
+
+    if rowsAreSame:
+        for option in options:
+            if checkIfDarkPixelsEqual_for2(figureImagesStats[H], answerImagesLogic[option]):
+                return option
+
 
 
 
@@ -133,21 +140,37 @@ def solve3x3(problem):
         if(checkIfDarkPixelsEqual(figureImagesStats[E], figureImagesStats[H], figureImagesStats[F], answerImagesStats[option])):
             return option
 
-        gh_option_percent = calculateIfPixelPercentageEqual(figureImagesStats[G], figureImagesStats[H], answerImagesStats[option])
+        gh_percent, h_option_percent, g_option_percent = calculateIfPixelPercentageEqual(figureImagesStats[G], figureImagesStats[H], answerImagesStats[option])
+
+
+        a_b_c_percent = check_percentage_change(ab_percent, bc_percent)
+        d_e_f_percent = check_percentage_change(de_percent, ef_percent)
+        g_h_option_percent = check_percentage_change(gh_percent, h_option_percent)
+
 
         # horizontal comparisons
-        if gh_option_percent < abc_percent + INCREASE_THRESHOLD and gh_option_percent > abc_percent - INCREASE_THRESHOLD:
+        if g_h_option_percent < a_b_c_percent + INCREASE_THRESHOLD and g_h_option_percent > a_b_c_percent - INCREASE_THRESHOLD:
             possible_answers.append(option)
-        if gh_option_percent < def_percent + INCREASE_THRESHOLD and gh_option_percent > def_percent - INCREASE_THRESHOLD:
-            possible_answers.append(option)
-
-        # vertical comparisons
-        if gh_option_percent < adg_percent + INCREASE_THRESHOLD and gh_option_percent > adg_percent - INCREASE_THRESHOLD:
-            possible_answers.append(option)
-        if gh_option_percent < beh_percent + INCREASE_THRESHOLD and gh_option_percent > beh_percent - INCREASE_THRESHOLD:
-            possible_answers.append(option)
+        # if g_h_option_percent < df_percent + INCREASE_THRESHOLD and g_h_option_percent > df_percent - INCREASE_THRESHOLD:
+        #     possible_answers.append(option)
+        #
+        # # vertical comparisons
+        # if g_h_option_percent < ag_percent + INCREASE_THRESHOLD and g_h_option_percent > ag_percent - INCREASE_THRESHOLD:
+        #     possible_answers.append(option)
+        # if g_h_option_percent < bh_percent + INCREASE_THRESHOLD and g_h_option_percent > bh_percent - INCREASE_THRESHOLD:
+        #     possible_answers.append(option)
 
     print(possible_answers)
+
+
+
+
+
+
+    # for remainingOption in options:
+
+
+
 
     return -1
 

@@ -72,8 +72,10 @@ def solve2x2(problem):
 
 
 def solve3x3(problem):
-    possible_answers = {}
-    possible_answers = []
+    hor_possible_answers = {}
+    hor_possible_answers = []
+    ver_possible_answers = {}
+    ver_possible_answers = []
 
     figures = ['A', 'B', 'C', 'D',
                'E', 'F', 'G', 'H']
@@ -148,19 +150,22 @@ def solve3x3(problem):
         g_h_option_percent = check_percentage_change(gh_percent, h_option_percent)
 
 
+
+
         # horizontal comparisons
         if g_h_option_percent < a_b_c_percent + INCREASE_THRESHOLD and g_h_option_percent > a_b_c_percent - INCREASE_THRESHOLD:
-            possible_answers.append(option)
-        # if g_h_option_percent < df_percent + INCREASE_THRESHOLD and g_h_option_percent > df_percent - INCREASE_THRESHOLD:
-        #     possible_answers.append(option)
-        #
-        # # vertical comparisons
-        # if g_h_option_percent < ag_percent + INCREASE_THRESHOLD and g_h_option_percent > ag_percent - INCREASE_THRESHOLD:
-        #     possible_answers.append(option)
-        # if g_h_option_percent < bh_percent + INCREASE_THRESHOLD and g_h_option_percent > bh_percent - INCREASE_THRESHOLD:
-        #     possible_answers.append(option)
+            hor_possible_answers.append(option)
+        if g_h_option_percent < d_e_f_percent + INCREASE_THRESHOLD and g_h_option_percent > d_e_f_percent - INCREASE_THRESHOLD:
+            hor_possible_answers.append(option)
 
-    print(possible_answers)
+        # vertical comparisons
+        if g_h_option_percent < ag_percent + INCREASE_THRESHOLD and g_h_option_percent > ag_percent - INCREASE_THRESHOLD:
+            ver_possible_answers.append(option)
+        if g_h_option_percent < bh_percent + INCREASE_THRESHOLD and g_h_option_percent > bh_percent - INCREASE_THRESHOLD:
+            ver_possible_answers.append(option)
+
+    print(hor_possible_answers)
+    print(ver_possible_answers)
 
 
 

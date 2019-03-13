@@ -11,6 +11,7 @@
 # Install Pillow and uncomment this line to access image processing.
 # from .AgentHelper import *
 from AgentHelper import *
+from AgentP1 import *
 import sys
 import itertools
 import random
@@ -51,27 +52,18 @@ match_scores = {}
 
 
 def solve2x2(problem):
+    helper = AgentP1()
     figures = ['A', 'B', 'C']
     options = ['1', '2', '3', '4', '5', '6']
+    global problem_figures
+    problem_figures = problem.figures
 
-    figuresImages = {}
-    answerImages = {}
-    figureImagesStats = {}
-    answerImagesStats = {}
-    figureImagesLogic = {}
-    answerImagesLogic = {}
-
-    figuresImages, answerImages, figureImagesStats, \
-    answerImagesStats, figureImagesLogic, answerImagesLogic = populateDictionaries(figures, options, problem)
-
-    rowOnePixels = rowOrColumnAddition([figureImagesStats['A'], figureImagesStats['B']])
-    columnOnePixels = rowOrColumnAddition([figureImagesStats['A'], figureImagesStats['C']])
-
-
+    return helper.solve2x2(problem)
 
 
 
 def solve3x3(problem):
+    helper = AgentHelper(problem)
     hor_possible_answers = {}
     hor_possible_answers = []
     ver_possible_answers = {}
@@ -90,94 +82,89 @@ def solve3x3(problem):
     answerImagesLogic = {}
 
     figuresImages, answerImages, figureImagesStats, \
-    answerImagesStats, figureImagesLogic, answerImagesLogic = populateDictionaries(figures, options, problem)
+    answerImagesStats, figureImagesLogic, answerImagesLogic = helper.populate_dictionaries(figures, options)
 
-    rowOneDarkPixels = rowOrColumnAddition([figureImagesStats['A'], figureImagesStats['B'], figureImagesStats['C']])
-    rowTwoDarkPixels = rowOrColumnAddition([figureImagesStats['D'], figureImagesStats['E'], figureImagesStats['F']])
+    rowOneDarkPixels = helper.rowOrColumnAddition([figureImagesStats['A'], figureImagesStats['B'], figureImagesStats['C']])
+    rowTwoDarkPixels = helper.rowOrColumnAddition([figureImagesStats['D'], figureImagesStats['E'], figureImagesStats['F']])
 
-    columnOneDarkPixels = rowOrColumnAddition([figureImagesStats['A'], figureImagesStats['D'], figureImagesStats['G']])
-    columnTwoDarkPixels = rowOrColumnAddition([figureImagesStats['B'], figureImagesStats['E'], figureImagesStats['H']])
+    columnOneDarkPixels = helper.rowOrColumnAddition([figureImagesStats['A'], figureImagesStats['D'], figureImagesStats['G']])
+    columnTwoDarkPixels = helper.rowOrColumnAddition([figureImagesStats['B'], figureImagesStats['E'], figureImagesStats['H']])
 
     columnsAreSame = False
     rowsAreSame = False
 
-    if(checkIfDarkPixelsEqual(figureImagesStats[B], figureImagesStats[C], figureImagesStats[E], figureImagesStats[F])):
+    if(helper.checkIfDarkPixelsEqual(figureImagesStats[B], figureImagesStats[C], figureImagesStats[E], figureImagesStats[F])):
         print('Columns Are the same!')
         columnsAreSame = True
-    if(checkIfDarkPixelsEqual(figureImagesStats[D], figureImagesStats[G], figureImagesStats[E], figureImagesStats[H])):
+    if(helper.checkIfDarkPixelsEqual(figureImagesStats[D], figureImagesStats[G], figureImagesStats[E], figureImagesStats[H])):
         print('Rows Are the same!')
         rowsAreSame = True
 
     # horizontal percentages
-    ab_percent, bc_percent, ac_percent = calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[B], figureImagesStats[C])
-    de_percent, ef_percent, df_percent = calculateIfPixelPercentageEqual(figureImagesStats[D], figureImagesStats[E], figureImagesStats[F])
+    ab_percent, bc_percent, ac_percent = helper.calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[B], figureImagesStats[C])
+    de_percent, ef_percent, df_percent = helper.calculateIfPixelPercentageEqual(figureImagesStats[D], figureImagesStats[E], figureImagesStats[F])
 
     # vertical percentages
-    ad_percent, dg_percent, ag_percent = calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[D], figureImagesStats[G])
-    be_percent, eh_percent, bh_percent = calculateIfPixelPercentageEqual(figureImagesStats[B], figureImagesStats[E], figureImagesStats[H])
+    ad_percent, dg_percent, ag_percent = helper.calculateIfPixelPercentageEqual(figureImagesStats[A], figureImagesStats[D], figureImagesStats[G])
+    be_percent, eh_percent, bh_percent = helper.calculateIfPixelPercentageEqual(figureImagesStats[B], figureImagesStats[E], figureImagesStats[H])
 
 
     if rowsAreSame:
         for option in options:
-            if checkIfDarkPixelsEqual_for2(figureImagesStats[H], answerImagesLogic[option]):
+            if helper.checkIfDarkPixelsEqual_for2(figureImagesStats[H], answerImagesLogic[option]):
                 return option
 
-
-
+    a_b_c_percent = helper.check_percentage_change(ab_percent, bc_percent)
+    d_e_f_percent = helper.check_percentage_change(de_percent, ef_percent)
+    a_d_g_percent = helper.check_percentage_change(ad_percent, dg_percent)
+    b_e_h_percent = helper.check_percentage_change(be_percent, eh_percent)
 
     for option in options:
-        # print('Analyzing Option: ' + str(option))
 
-        image = answerImagesLogic[option]
-
-
-        optionsColumnsAreSame = False
-        optionsRowsAreSame = False
-
-        rowThreeDarkPixels = rowOrColumnAddition([figureImagesStats[G], figureImagesStats[H], answerImagesStats[option]])
-        columnThreeDarkPixels = rowOrColumnAddition([figureImagesStats[C], figureImagesStats[F], answerImagesStats[option]])
-
-        if(checkIfDarkPixelsEqual(figureImagesStats[E], figureImagesStats[F], figureImagesStats[H], answerImagesStats[option])):
-            return option
-        if(checkIfDarkPixelsEqual(figureImagesStats[E], figureImagesStats[H], figureImagesStats[F], answerImagesStats[option])):
+        if helper.checkIfDarkPixelsEqual(figureImagesStats[E], figureImagesStats[F],
+                                         figureImagesStats[H], answerImagesStats[option]):
             return option
 
-        gh_percent, h_option_percent, g_option_percent = calculateIfPixelPercentageEqual(figureImagesStats[G], figureImagesStats[H], answerImagesStats[option])
+        if helper.checkIfDarkPixelsEqual(figureImagesStats[E], figureImagesStats[H],
+                                         figureImagesStats[F], answerImagesStats[option]):
+            return option
 
+        gh_percent, h_option_percent, g_option_percent = helper.calculateIfPixelPercentageEqual(figureImagesStats[G],
+                                                                                                figureImagesStats[H],
+                                                                                                answerImagesStats[option])
 
-        a_b_c_percent = check_percentage_change(ab_percent, bc_percent)
-        d_e_f_percent = check_percentage_change(de_percent, ef_percent)
-        g_h_option_percent = check_percentage_change(gh_percent, h_option_percent)
-
-
-
+        g_h_option_percent = helper.check_percentage_change(gh_percent, h_option_percent)
 
         # horizontal comparisons
-        if g_h_option_percent < a_b_c_percent + INCREASE_THRESHOLD and g_h_option_percent > a_b_c_percent - INCREASE_THRESHOLD:
+        if a_b_c_percent - INCREASE_THRESHOLD <= g_h_option_percent <= a_b_c_percent + INCREASE_THRESHOLD:
             hor_possible_answers.append(option)
-        if g_h_option_percent < d_e_f_percent + INCREASE_THRESHOLD and g_h_option_percent > d_e_f_percent - INCREASE_THRESHOLD:
+
+        if d_e_f_percent - INCREASE_THRESHOLD <= g_h_option_percent <= d_e_f_percent + INCREASE_THRESHOLD:
             hor_possible_answers.append(option)
 
         # vertical comparisons
-        if g_h_option_percent < ag_percent + INCREASE_THRESHOLD and g_h_option_percent > ag_percent - INCREASE_THRESHOLD:
+        if a_d_g_percent - INCREASE_THRESHOLD <= g_h_option_percent <= a_d_g_percent + INCREASE_THRESHOLD:
             ver_possible_answers.append(option)
-        if g_h_option_percent < bh_percent + INCREASE_THRESHOLD and g_h_option_percent > bh_percent - INCREASE_THRESHOLD:
+        if b_e_h_percent - INCREASE_THRESHOLD <= g_h_option_percent <= b_e_h_percent + INCREASE_THRESHOLD:
             ver_possible_answers.append(option)
 
     print(hor_possible_answers)
     print(ver_possible_answers)
 
 
+    possible_answers = set()
 
+    for answer in hor_possible_answers:
+        possible_answers.add(answer)
+    # for answer in ver_possible_answers:
+    #     possible_answers.add(answer)
 
+    # print(possible_answers)
 
+    rms_images = helper.get_rms(helper.convert_images())
 
-    # for remainingOption in options:
+    return helper.choose_answer(rms_images, possible_answers)
 
-
-
-
-    return -1
 
 class Agent:
     # The default constructor for your Agent. Make sure to execute any
@@ -199,11 +186,12 @@ class Agent:
     #
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
+
     def Solve(self,problem):
         print("=======================================")
         print("Solving " + problem.name)
 
-        if(problem.problemType == MATRIX_SIZE["small"]):
+        if problem.problemType == MATRIX_SIZE["small"]:
             answer = solve2x2(problem)
         elif problem.problemType == MATRIX_SIZE["large"]:
             answer = solve3x3(problem)

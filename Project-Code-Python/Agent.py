@@ -65,11 +65,20 @@ def solve2x2(problem):
 
 
 def solve3x3(problem):
-    answer = solver.reflection_solver(problem)
-    if answer == -1:
-        answer = solver.pixel_solver(problem)
+    if 'C-' in problem.name:
+        answer = solver.reflection_solver(problem)
         if answer == -1:
-            answer = solver.percent_increase_solver()
+            answer = solver.pixel_solver(problem)
+            if answer == -1:
+                answer = solver.percent_increase_solver()
+
+    elif 'E-' in problem.name:
+        answer = solver.and_solver(problem)
+        # if answer == -1:
+        #     answer = solver.or_solver(problem)
+        #     if answer == -1:
+        #         return -1
+
 
     return answer
 

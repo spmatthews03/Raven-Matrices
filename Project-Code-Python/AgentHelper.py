@@ -23,6 +23,7 @@ class AgentHelper:
         return float(dark_pixel_pct_img2 - dark_pixel_pct_img1)
 
 
+
     def figureDeletionDifference(self, image1, image2):
         return self.number_dark_pixels(image1) - self.number_dark_pixels(image2)
 

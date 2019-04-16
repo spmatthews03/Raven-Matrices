@@ -207,6 +207,15 @@ class Solvers:
         return -1
 
 
+    def and_solver(self, problem):
+        for i in range(1,9):
+            option_image = Image.open(problem.figures[str(i)].visualFilename)
+            if abs(helper.calculate_percent_difference(ImageChops.logical_and(image_a, image_b), image_c)) < .02 :
+                if abs(helper.calculate_percent_difference(ImageChops.logical_and(image_a, image_b), option_image)):
+                    return option_image
+
+
+
     def rms_solver(self, possible_answers):
         rms_images = helper.get_rms(helper.convert_images())
         return helper.choose_answer(rms_images, possible_answers)
